@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PACE 45 · ASIMCO SRL · Dashboard en Vivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ── CONFIG: PEGA AQUÍ TU URL DE APPS SCRIPT ── */
+/* Ver instrucciones al final de este archivo    */
+
+:root {
+  --navy:#1B2A4A; --navy2:#243558; --crimson:#C8102E;
+  --green:#2E7D32; --gold:#D4A017; --paper:#F8F6F1;
+  --ink:#111827; --mid:#6B7280; --line:#E5E0D8;
+  --white:#FFF; --success:#16A34A; --warn:#D97706; --danger:#DC2626;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* ── LOADING SCREEN ── */
+#loading{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;transition:opacity .4s
+}
+#loading.hide{opacity:0;pointer-events:none}
+.loading-logo{font-family:'Syne';font-weight:800;font-size:3rem;color:white;letter-spacing:-2px;margin-bottom:.5rem}
+.loading-logo span{color:var(--gold)}
+.loading-sub{font-family:'JetBrains Mono';font-size:.72rem;letter-spacing:3px;color:rgba(255,255,255,.4);margin-bottom:2rem}
+.loading-bar{width:240px;height:2px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden}
+.loading-fill{height:100%;background:var(--gold);border-radius:1px;animation:loadfill 1.6s ease forwards}
+@keyframes loadfill{from{width:0}to{width:100%}}
+.loading-msg{font-family:'JetBrains Mono';font-size:.62rem;color:rgba(255,255,255,.3);margin-top:.75rem;letter-spacing:1px}
+
+/* ── ERROR BANNER ── */
+#error-banner{
+  display:none;background:#fef2f2;border:1px solid #fecaca;
+  padding:1rem 1.5rem;margin:1rem;border-radius:8px;
+  font-size:.83rem;color:#991b1b;
+}
+#error-banner strong{display:block;margin-bottom:.25rem}
+
+/* ── CONFIG MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .2s ease
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:white;border-radius:12px;padding:2rem;width:90%;max-width:560px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3)
+}
+.modal h3{font-family:'Syne';font-weight:800;font-size:1.3rem;margin-bottom:.5rem}
+.modal p{font-size:.83rem;color:var(--mid);margin-bottom:1.25rem;line-height:1.6}
+.modal input{
+  width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:7px;
+  font-family:'JetBrains Mono';font-size:.78rem;color:var(--ink);background:var(--paper);
+  outline:none;margin-bottom:.75rem;transition:border .15s
+}
+.modal input:focus{border-color:var(--navy)}
+.modal-btns{display:flex;gap:.6rem}
+.btn-primary{font-family:'JetBrains Mono';font-size:.68rem;letter-spacing:1px;text-transform:uppercase;padding:.65rem 1.2rem;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer}
+.btn-secondary{font-family:'JetBrains Mono';font-size:.68rem;letter-spacing:1px;text-transform:uppercase;padding:.65rem 1.2rem;background:transparent;color:var(--mid);border:1.5px solid var(--line);border-radius:6px;cursor:pointer}
+.modal-step{font-family:'JetBrains Mono';font-size:.65rem;letter-spacing:1px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:.75rem 1rem;margin-bottom:.75rem}
+.modal-step strong{color:var(--navy);display:block;margin-bottom:.2rem}
+
+/* ── TOP NAV ── */
+.topnav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:var(--navy);display:flex;align-items:center;
+  justify-content:space-between;padding:0 2rem;height:56px;
+  border-bottom:3px solid var(--crimson)
+}
+.nav-brand{display:flex;align-items:center;gap:.75rem}
+.nav-logo{width:34px;height:34px;border-radius:6px;background:var(--crimson);display:flex;align-items:center;justify-content:center;font-family:'Syne';font-weight:800;font-size:.95rem;color:white}
+.nav-name{font-family:'Syne';font-weight:700;font-size:.9rem;color:white}
+.nav-name span{color:var(--gold)}
+.nav-tabs{display:flex;gap:0}
+.nav-tab{font-family:'JetBrains Mono';font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);padding:0 .9rem;height:56px;display:flex;align-items:center;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-3px;transition:all .18s}
+.nav-tab:hover,.nav-tab.active{color:white;border-bottom-color:var(--gold)}
+.nav-right{display:flex;align-items:center;gap:.6rem}
+.sync-btn{font-family:'JetBrains Mono';font-size:.6rem;letter-spacing:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);padding:.3rem .75rem;cursor:pointer;transition:all .15s}
+.sync-btn:hover{background:rgba(255,255,255,.15);color:white}
+.sync-btn.syncing{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.last-sync{font-family:'JetBrains Mono';font-size:.55rem;color:rgba(255,255,255,.3);letter-spacing:.5px}
+.badge-pace{font-family:'JetBrains Mono';font-size:.58rem;letter-spacing:2px;background:var(--crimson);color:white;padding:.22rem .6rem;text-transform:uppercase}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;padding-top:56px}
+.sidebar{width:220px;flex-shrink:0;background:var(--navy2);position:fixed;left:0;top:56px;bottom:0;overflow-y:auto;border-right:1px solid rgba(255,255,255,.05)}
+.sb-section{font-family:'JetBrains Mono';font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.22);padding:.65rem 1.4rem .2rem}
+.sb-link{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.4rem;font-size:.8rem;color:rgba(255,255,255,.5);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sb-link:hover{color:white;background:rgba(255,255,255,.04)}
+.sb-link.active{color:white;border-left-color:var(--gold);background:rgba(212,160,23,.07)}
+.sb-link .ic{font-size:.95rem;width:17px;text-align:center}
+.sb-divider{border:none;border-top:1px solid rgba(255,255,255,.05);margin:.4rem 0}
+.sb-stat{padding:.6rem 1.4rem}
+.sb-stat-label{font-family:'JetBrains Mono';font-size:.52rem;color:rgba(255,255,255,.25);letter-spacing:1px}
+.sb-stat-val{font-family:'Syne';font-weight:700;font-size:1.3rem;color:var(--gold)}
+.sb-cfg-btn{margin:1rem 1.4rem 0;font-family:'JetBrains Mono';font-size:.58rem;letter-spacing:1px;text-transform:uppercase;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);padding:.45rem .7rem;cursor:pointer;width:calc(100% - 2.8rem);transition:all .15s}
+.sb-cfg-btn:hover{background:rgba(255,255,255,.12);color:white}
+
+.main{flex:1;margin-left:220px;min-height:calc(100vh - 56px)}
+.view{display:none;padding:1.75rem 2rem;animation:slideIn .25s ease}
+.view.active{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.view-hdr{margin-bottom:1.75rem}
+.view-tag{font-family:'JetBrains Mono';font-size:.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--crimson);margin-bottom:.35rem}
+.view-title{font-family:'Syne';font-weight:800;font-size:2rem;line-height:1;color:var(--ink);margin-bottom:.4rem}
+.view-sub{font-size:.85rem;color:var(--mid);line-height:1.6}
+
+/* ── CARDS ── */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:1.25rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin-bottom:1.25rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:1.25rem}
+.card{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:1.2rem}
+.card-t3{border-top:3px solid var(--navy)}
+.card-tr{border-top:3px solid var(--crimson)}
+.card-tg{border-top:3px solid var(--gold)}
+.card-tv{border-top:3px solid var(--green)}
+.mc-lbl{font-family:'JetBrains Mono';font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:.35rem}
+.mc-val{font-family:'Syne';font-weight:800;font-size:2.2rem;line-height:1;color:var(--ink)}
+.mc-val.r{color:var(--crimson)}.mc-val.g{color:var(--green)}.mc-val.gold{color:var(--gold)}
+.mc-sub{font-size:.72rem;color:var(--mid);margin-top:.3rem}
+.card-title{font-family:'Syne';font-weight:700;font-size:.95rem;margin-bottom:.75rem}
+.card-body{font-size:.82rem;color:var(--mid);line-height:1.65}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.tbl th{background:var(--navy);color:white;font-family:'JetBrains Mono';font-size:.6rem;letter-spacing:1px;text-transform:uppercase;padding:.6rem .75rem;text-align:left}
+.tbl td{padding:.6rem .75rem;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:var(--paper)}
+.tbl tr:last-child td{border-bottom:none}
+
+/* ── PILLS ── */
+.pill{display:inline-block;font-family:'JetBrains Mono';font-size:.58rem;font-weight:500;letter-spacing:.5px;padding:.18rem .5rem;border-radius:3px;text-transform:uppercase}
+.p-red{background:#fef2f2;color:#991b1b}
+.p-green{background:#f0fdf4;color:#166534}
+.p-gold{background:#fffbeb;color:#92400e}
+.p-blue{background:#eff6ff;color:#1e40af}
+.p-navy{background:var(--navy);color:white}
+.p-gray{background:var(--paper);color:var(--mid)}
+.p-orange{background:#fff7ed;color:#c2410c}
+
+/* ── OKR ── */
+.okr-card{background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:.85rem}
+.okr-hdr{background:var(--navy);padding:.85rem 1.1rem;display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
+.okr-obj{font-family:'Syne';font-weight:700;font-size:.9rem;color:white;flex:1;line-height:1.3}
+.okr-period{font-family:'JetBrains Mono';font-size:.58rem;color:rgba(255,255,255,.45);letter-spacing:1px;flex-shrink:0}
+.okr-body{padding:.75rem 1.1rem}
+.kr-item{display:flex;align-items:flex-start;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--line)}
+.kr-item:last-child{border-bottom:none}
+.kr-num{font-family:'JetBrains Mono';font-size:.62rem;color:var(--gold);background:rgba(212,160,23,.1);padding:.15rem .38rem;border-radius:3px;flex-shrink:0;margin-top:.1rem}
+.kr-label{font-size:.8rem;font-weight:500;color:var(--ink);margin-bottom:.3rem;line-height:1.4}
+.kr-meta{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.kr-target{font-family:'JetBrains Mono';font-size:.65rem;color:var(--mid)}
+.kr-bar{flex:1;height:4px;background:var(--line);border-radius:2px;overflow:hidden;min-width:80px}
+.kr-fill{height:100%;border-radius:2px;background:var(--navy);transition:width .5s}
+.kr-pct{font-family:'JetBrains Mono';font-size:.68rem;font-weight:500;min-width:32px;text-align:right}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:.75rem;margin-bottom:1.25rem}
+.kpi-card{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:.95rem;position:relative}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;background:var(--c,var(--line))}
+.kpi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem}
+.kpi-name{font-size:.78rem;font-weight:500;color:var(--ink);line-height:1.3;flex:1;margin-right:.4rem}
+.kpi-area{font-family:'JetBrains Mono';font-size:.56rem;letter-spacing:1px;color:var(--mid);text-transform:uppercase}
+.kpi-val{font-family:'Syne';font-weight:800;font-size:1.75rem;line-height:1;color:var(--ink)}
+.kpi-meta{font-size:.68rem;color:var(--mid);margin-top:.25rem;display:flex;align-items:center;gap:.35rem}
+.sem{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sem-v{background:var(--success)}.sem-a{background:var(--warn)}.sem-r{background:var(--danger)}
+
+/* ── ROADMAP ── */
+.rm-item{background:var(--white);border:1px solid var(--line);border-radius:8px;margin-bottom:.5rem;overflow:hidden}
+.rm-hdr{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;cursor:pointer;background:var(--paper);transition:background .12s}
+.rm-hdr:hover{background:#ede8df}
+.rm-week{font-family:'JetBrains Mono';font-size:.62rem;letter-spacing:1px;color:var(--mid);min-width:62px}
+.rm-title{font-family:'Syne';font-weight:700;font-size:.88rem;flex:1}
+.rm-body{padding:.75rem 1rem;display:none;border-top:1px solid var(--line)}
+.rm-item.open .rm-body{display:block}
+.rm-act{display:flex;align-items:center;gap:.55rem;font-size:.8rem;padding:.38rem 0;border-bottom:1px solid var(--line)}
+.rm-act:last-child{border-bottom:none}
+.rm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rm-text{flex:1;line-height:1.4}
+.rm-text.done{text-decoration:line-through;color:var(--mid)}
+.rm-owner{font-family:'JetBrains Mono';font-size:.58rem;color:var(--mid);text-align:right;min-width:70px}
+
+/* ── RECOMENDACIONES ── */
+.rec{background:var(--white);border:1px solid var(--line);border-left:4px solid var(--c,var(--navy));border-radius:0 8px 8px 0;padding:1rem 1.15rem;margin-bottom:.65rem}
+.rec-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;margin-bottom:.4rem}
+.rec-title{font-family:'Syne';font-weight:700;font-size:.9rem}
+.rec-badges{display:flex;gap:.3rem;flex-wrap:wrap;flex-shrink:0}
+.rec-body{font-size:.8rem;color:var(--mid);line-height:1.65}
+
+/* ── BRECHAS ── */
+.brecha{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:1rem;margin-bottom:.5rem;display:flex;gap:.75rem;align-items:flex-start}
+.brecha-num{font-family:'Syne';font-weight:800;font-size:1.5rem;color:var(--line);min-width:36px;line-height:1}
+.brecha-body{flex:1}
+.brecha-title{font-family:'Syne';font-weight:700;font-size:.88rem;margin-bottom:.25rem}
+.brecha-desc{font-size:.78rem;color:var(--mid);line-height:1.55}
+.brecha-tags{margin-top:.4rem;display:flex;gap:.3rem;flex-wrap:wrap}
+
+/* ── CHART ── */
+.chart-wrap{position:relative;height:200px}
+.chart-wrap-sm{position:relative;height:155px}
+
+/* ── ALERTS ── */
+.alert{border-radius:8px;padding:.85rem 1.1rem;margin-bottom:1rem;display:flex;gap:.65rem}
+.alert-body{font-size:.8rem;line-height:1.6}
+.alert-body strong{display:block;margin-bottom:.15rem;font-size:.82rem}
+.a-danger{background:#fef2f2;border:1px solid #fecaca}
+.a-danger .alert-body{color:#991b1b}
+.a-info{background:#eff6ff;border:1px solid #bfdbfe}
+.a-info .alert-body{color:#1e40af}
+.a-success{background:#f0fdf4;border:1px solid #bbf7d0}
+.a-success .alert-body{color:#166534}
+.a-warn{background:#fffbeb;border:1px solid #fde68a}
+.a-warn .alert-body{color:#92400e}
+
+hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.sec-title{font-family:'Syne';font-weight:700;font-size:1rem}
+.sec-tag{font-family:'JetBrains Mono';font-size:.6rem;letter-spacing:1px;text-transform:uppercase;color:var(--mid)}
+.mono{font-family:'JetBrains Mono'}
+
+@media(max-width:860px){.sidebar{display:none}.main{margin-left:0}.g4,.g3{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}.nav-tabs{display:none}}
+@media print{.sidebar,.topnav,#loading,.modal-overlay{display:none!important}.main{margin-left:0}.view{display:block!important}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-logo">PACE<span>45</span></div>
+  <div class="loading-sub">ASIMCO SRL · CC&A STRATEX SPA</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div class="loading-msg" id="loading-msg">Conectando con Google Sheets...</div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="modal-overlay" id="config-modal" style="display:none">
+  <div class="modal">
+    <h3>Conectar con Google Sheets</h3>
+    <p>Pega la URL de tu Apps Script Web App para que el dashboard lea los datos en tiempo real. Solo necesitas hacer esto una vez.</p>
+
+    <div class="modal-step">
+      <strong>Paso 1 · Crea la estructura en Google Sheets</strong>
+      En el editor Apps Script → ejecuta la función <span class="mono" style="color:var(--navy)">crearEstructuraInicial()</span>
+    </div>
+    <div class="modal-step">
+      <strong>Paso 2 · Implementa como App Web</strong>
+      Implementar → Nueva implementación → App web · Ejecutar como: Yo · Acceso: Cualquiera
+    </div>
+    <div class="modal-step">
+      <strong>Paso 3 · Pega la URL aquí</strong>
+      La URL tiene este formato: <span class="mono" style="color:var(--mid);font-size:.65rem">https://script.google.com/macros/s/.../exec</span>
+    </div>
+
+    <input type="text" id="api-url-input" placeholder="https://script.google.com/macros/s/TU_ID/exec">
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="saveAndConnect()">Conectar y guardar</button>
+      <button class="btn-secondary" onclick="useDemoData()">Usar datos demo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div id="error-banner">
+  <strong>Error de conexión con Google Sheets</strong>
+  <span id="error-msg"></span> —
+  <a href="#" onclick="showConfigModal()" style="color:var(--danger)">Reconfigurar URL</a> o
+  <a href="#" onclick="useDemoData()" style="color:var(--danger)">usar datos demo</a>
+</div>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="nav-brand">
+    <div class="nav-logo">A</div>
+    <div class="nav-name" id="nav-org">ASIMCO SRL · <span>PACE 45</span></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showView('okr')">OKR / KR</button>
+    <button class="nav-tab" onclick="showView('kpis')">KPIs</button>
+    <button class="nav-tab" onclick="showView('brechas')">Brechas</button>
+    <button class="nav-tab" onclick="showView('roadmap')">Roadmap</button>
+    <button class="nav-tab" onclick="showView('recomendaciones')">Recomendaciones</button>
+  </div>
+  <div class="nav-right">
+    <button class="sync-btn" id="sync-btn" onclick="fetchData()">↻ Sincronizar</button>
+    <span class="last-sync" id="last-sync">—</span>
+    <span class="badge-pace">PACE 45</span>
+  </div>
+</nav>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-section">Vistas</div>
+  <div class="sb-link active" onclick="showView('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-link" onclick="showView('okr')"><span class="ic">🎯</span>OKR / KR</div>
+  <div class="sb-link" onclick="showView('kpis')"><span class="ic">📈</span>KPIs</div>
+  <div class="sb-link" onclick="showView('brechas')"><span class="ic">⚠️</span>Brechas</div>
+  <div class="sb-link" onclick="showView('roadmap')"><span class="ic">🗺</span>Roadmap</div>
+  <div class="sb-link" onclick="showView('recomendaciones')"><span class="ic">💡</span>Recomendaciones</div>
+  <hr class="sb-divider">
+  <div class="sb-section">Métricas en vivo</div>
+  <div class="sb-stat"><div class="sb-stat-label">Semana actual</div><div class="sb-stat-val" id="sb-semana">—</div></div>
+  <div class="sb-stat"><div class="sb-stat-label">Clientes corporativos</div><div class="sb-stat-val" id="sb-clientes">—</div></div>
+  <div class="sb-stat"><div class="sb-stat-label">KPIs activos</div><div class="sb-stat-val" id="sb-kpis">—</div></div>
+  <hr class="sb-divider">
+  <button class="sb-cfg-btn" onclick="showConfigModal()">⚙ Configurar fuente</button>
+  <button class="sb-cfg-btn" style="margin-top:.5rem" onclick="window.print()">⬇ Exportar PDF</button>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ══ DASHBOARD ══ -->
+<div class="view active" id="view-dashboard">
+  <div class="view-hdr">
+    <div class="view-tag">// 01 · Centro de Control</div>
+    <h1 class="view-title" id="dash-title">ASIMCO SRL · PACE 45</h1>
+    <p class="view-sub" id="dash-sub">Conectando con Google Sheets...</p>
+  </div>
+
+  <div class="g4" id="dash-metrics">
+    <div class="card card-t3"><div class="mc-lbl">Cargando...</div><div class="mc-val">—</div></div>
+    <div class="card card-tr"><div class="mc-lbl">Cargando...</div><div class="mc-val r">—</div></div>
+    <div class="card card-tg"><div class="mc-lbl">Cargando...</div><div class="mc-val gold">—</div></div>
+    <div class="card card-tv"><div class="mc-lbl">Cargando...</div><div class="mc-val g">—</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Radar de madurez organizacional</div>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Brechas por nivel de urgencia</div>
+      <div class="chart-wrap"><canvas id="brechasChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="g3" id="dash-imperativos">
+    <!-- Generado dinámicamente -->
+  </div>
+</div>
+
+<!-- ══ OKR ══ -->
+<div class="view" id="view-okr">
+  <div class="view-hdr">
+    <div class="view-tag">// 02 · Marco Estratégico</div>
+    <h1 class="view-title">OKRs y Key Results</h1>
+    <p class="view-sub">Objetivos y resultados medibles · Alimentados desde Google Sheets</p>
+  </div>
+  <div id="okr-container">
+    <div class="alert a-info"><div>ℹ️</div><div class="alert-body"><strong>Cargando OKRs...</strong>Conectando con la fuente de datos.</div></div>
+  </div>
+</div>
+
+<!-- ══ KPIs ══ -->
+<div class="view" id="view-kpis">
+  <div class="view-hdr">
+    <div class="view-tag">// 03 · Sistema de Indicadores</div>
+    <h1 class="view-title">KPIs Estratégicos y Operativos</h1>
+    <p class="view-sub">Tablero ejecutivo · Actualizado desde Google Sheets por el consultor</p>
+  </div>
+  <div id="kpi-perspectivas"></div>
+  <div class="g2" style="margin-top:1rem">
+    <div class="card"><div class="card-title">Estado global de KPIs</div><div class="chart-wrap"><canvas id="kpiChart"></canvas></div></div>
+    <div class="card"><div class="card-title">KPIs por perspectiva BSC</div><div class="chart-wrap"><canvas id="bscChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ══ BRECHAS ══ -->
+<div class="view" id="view-brechas">
+  <div class="view-hdr">
+    <div class="view-tag">// 04 · Diagnóstico</div>
+    <h1 class="view-title">Brechas Críticas Identificadas</h1>
+    <p class="view-sub">Según diagnóstico estratégico V5 FINAL · ASIMCO SRL · Mayo 2026</p>
+  </div>
+  <div id="brechas-container"></div>
+</div>
+
+<!-- ══ ROADMAP ══ -->
+<div class="view" id="view-roadmap">
+  <div class="view-hdr">
+    <div class="view-tag">// 05 · Plan de Trabajo</div>
+    <h1 class="view-title">Hoja de Ruta PACE 45</h1>
+    <p class="view-sub">34 actividades · 6 semanas · Estado actualizado por el consultor desde Sheets</p>
+  </div>
+  <div class="g4" id="roadmap-metrics" style="margin-bottom:1rem"></div>
+  <div id="roadmap-container"></div>
+</div>
+
+<!-- ══ RECOMENDACIONES ══ -->
+<div class="view" id="view-recomendaciones">
+  <div class="view-hdr">
+    <div class="view-tag">// 06 · Recomendaciones CC&A</div>
+    <h1 class="view-title">Recomendaciones Ejecutivas</h1>
+    <p class="view-sub">Para ASIMCO SRL · Confidencial · Basadas en diagnóstico V5 · Mayo 2026</p>
+  </div>
+  <div id="rec-container"></div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════════════════════════
+const LS_KEY_URL  = 'pace45_api_url';
+const LS_KEY_DATA = 'pace45_last_data';
+let   API_URL     = localStorage.getItem(LS_KEY_URL) || '';
+let   DATA        = null;
+let   chartsMap   = {};
+
+// ── DEMO DATA (cuando no hay conexión) ────────────────────────
+const DEMO = {
+  config: {
+    org_nombre:'ASIMCO SRL', org_subtitulo:'Auditores y Consultores de Empresas',
+    consultor:'Gonzalo Quiroga Soria', periodo:'Mayo – Junio 2026',
+    semana_actual:'1', clientes_corp:'28', clientes_belcorp:'84',
+    fase_actual:'Arranque y Diagnóstico'
+  },
+  okrs: [
+    {id:'O1',objetivo:'Formalizar la estructura organizacional',horizonte:'Q3 2026',kr_num:'KR1',key_result:'Aprobar y publicar Manual de Organización y Funciones (100% roles)',meta_inicio:'0%',meta_fin:'100%',valor_actual:'0%',responsable:'Sub-Gerencia',area:'Toda la org.',estado:'Pendiente'},
+    {id:'O1',objetivo:'Formalizar la estructura organizacional',horizonte:'Q3 2026',kr_num:'KR2',key_result:'Separar doble rol Auditoría / Sub-Gerencia (0 → 3 roles separados)',meta_inicio:'0',meta_fin:'3',valor_actual:'0',responsable:'Gerencia General',area:'Estructura',estado:'Pendiente'},
+    {id:'O1',objetivo:'Formalizar la estructura organizacional',horizonte:'Q3 2026',kr_num:'KR3',key_result:'Cubrir vacante área Legal con titular documentado',meta_inicio:'0',meta_fin:'1',valor_actual:'0',responsable:'RRHH',area:'Legal',estado:'Pendiente'},
+    {id:'O2',objetivo:'Implementar sistema de control operativo basado en datos',horizonte:'Q3–Q4 2026',kr_num:'KR1',key_result:'Activar ≥15 KPIs medidos semanalmente',meta_inicio:'0',meta_fin:'15',valor_actual:'0',responsable:'Gte. Planificación',area:'Control',estado:'En proceso'},
+    {id:'O2',objetivo:'Implementar sistema de control operativo basado en datos',horizonte:'Q3–Q4 2026',kr_num:'KR2',key_result:'Documentar 100% procesos críticos Contabilidad + Auditoría',meta_inicio:'0',meta_fin:'8',valor_actual:'0',responsable:'Jefes de área',area:'Ops.',estado:'Pendiente'},
+    {id:'O3',objetivo:'Posicionar ASIMCO SRL como firma líder en Bolivia',horizonte:'Q4 2026 – H1 2027',kr_num:'KR1',key_result:'Incrementar cartera corporativa 20% (28 → 34 clientes)',meta_inicio:'28',meta_fin:'34',valor_actual:'28',responsable:'Gerencia General',area:'Comercial',estado:'Pendiente'},
+    {id:'O3',objetivo:'Posicionar ASIMCO SRL como firma líder en Bolivia',horizonte:'Q4 2026 – H1 2027',kr_num:'KR2',key_result:'Lanzar 2 nuevas líneas de servicio de alto valor',meta_inicio:'0',meta_fin:'2',valor_actual:'0',responsable:'Gerencia General',area:'Estrategia',estado:'Pendiente'},
+  ],
+  kpis: [
+    {id:'F1',nombre:'Ingresos mensuales',perspectiva:'Financiera',area:'Finanzas',valor_actual:'',meta:'',unidad:'USD',semaforo:'Amarillo',responsable:'Admin. Finanzas',comentario:'Sin línea base'},
+    {id:'C1',nombre:'Clientes corporativos activos',perspectiva:'Clientes',area:'Comercial',valor_actual:'28',meta:'34',unidad:'N°',semaforo:'Verde',responsable:'Gerencia General',comentario:''},
+    {id:'C2',nombre:'Clientes Belcorp activos',perspectiva:'Clientes',area:'Comercial',valor_actual:'84',meta:'90',unidad:'N°',semaforo:'Verde',responsable:'Sub-Gerencia',comentario:''},
+    {id:'C3',nombre:'NPS de clientes',perspectiva:'Clientes',area:'Calidad',valor_actual:'',meta:'70',unidad:'Pts',semaforo:'Rojo',responsable:'Sub-Gerencia',comentario:'Sin medir'},
+    {id:'P1',nombre:'% Procesos documentados',perspectiva:'Procesos',area:'Operaciones',valor_actual:'0',meta:'100',unidad:'%',semaforo:'Rojo',responsable:'Jefes de área',comentario:'Meta sem. 5'},
+    {id:'P2',nombre:'Cumplimiento de plazos',perspectiva:'Procesos',area:'Operaciones',valor_actual:'',meta:'95',unidad:'%',semaforo:'Amarillo',responsable:'Jefes de área',comentario:'Sin medir'},
+    {id:'A1',nombre:'Total colaboradores activos',perspectiva:'Personas',area:'RRHH',valor_actual:'28',meta:'35',unidad:'N°',semaforo:'Verde',responsable:'RRHH',comentario:''},
+    {id:'A3',nombre:'Capacitación por persona/mes',perspectiva:'Personas',area:'RRHH',valor_actual:'0',meta:'4',unidad:'Horas',semaforo:'Rojo',responsable:'RRHH',comentario:'Meta ≥4h'},
+  ],
+  brechas: [
+    {id:'B1',brecha:'Estructura insuficiente',descripcion:'El modelo actual no soporta el crecimiento proyectado. Roles superpuestos y áreas sin titular',nivel:'Crítico',impacto:'Crecimiento bloqueado',area:'Toda la org.',urgencia:'Inmediata',estado:'Sin intervención'},
+    {id:'B2',brecha:'Procesos manuales',descripcion:'Sin estandarización uniforme entre áreas. Alta variabilidad de calidad y tiempo de entrega',nivel:'Crítico',impacto:'Sin escalabilidad',area:'Ops.',urgencia:'Alta',estado:'Sin intervención'},
+    {id:'B3',brecha:'Alineación débil',descripcion:'Ausencia de visión compartida. Prioridades dispersas. Sin reuniones de gestión formales',nivel:'Alto',impacto:'Visión fragmentada',area:'Gerencia',urgencia:'Alta',estado:'Sin intervención'},
+    {id:'B4',brecha:'Control operativo endeble',descripcion:'Sin métricas, sin indicadores activos. Gestión por intuición y experiencia personal',nivel:'Crítico',impacto:'Sin datos para decidir',area:'Control',urgencia:'Inmediata',estado:'En proceso'},
+    {id:'B5',brecha:'Dependencia crítica',descripcion:'Operación concentrada en personas clave. Sin respaldo ni documentación de procesos',nivel:'Crítico',impacto:'Riesgo continuidad',area:'Toda la org.',urgencia:'Inmediata',estado:'Sin intervención'},
+    {id:'B6',brecha:'Riesgo de estancamiento',descripcion:'Modelo vigente = pérdida de competitividad inevitable si no se actúa en los próximos 90 días',nivel:'Alto',impacto:'Pérdida competitiva',area:'Estrategia',urgencia:'Alta',estado:'Sin intervención'},
+  ],
+  roadmap: [
+    {id:'A1',fase:'Arranque',semana:'Sem 1',actividad:'Reunión de arranque con Gerencia General',responsable:'CC&A + ASIMCO',estado:'Completado',completado:'Sí'},
+    {id:'A2',fase:'Arranque',semana:'Sem 1',actividad:'Revisión del diagnóstico estratégico V5 FINAL',responsable:'CC&A',estado:'Completado',completado:'Sí'},
+    {id:'A3',fase:'Arranque',semana:'Sem 1',actividad:'Requerimiento formal de información (RFI)',responsable:'Sub-Gerencia',estado:'En proceso',completado:'No'},
+    {id:'A4',fase:'Arranque',semana:'Sem 1',actividad:'Entrevista: Gerente General',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+    {id:'A5',fase:'Arranque',semana:'Sem 2',actividad:'Entrevista: Sub-Gerente General',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+    {id:'B1',fase:'Diagnóstico',semana:'Sem 2',actividad:'Análisis de brechas AS-IS vs TO-BE',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+    {id:'B3',fase:'Diagnóstico',semana:'Sem 3',actividad:'Mapeo de procesos críticos AS-IS',responsable:'CC&A + Jefes',estado:'Pendiente',completado:'No'},
+    {id:'B5',fase:'Diagnóstico',semana:'Sem 3',actividad:'Informe de avance Semana 3',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+    {id:'C1',fase:'Diseño',semana:'Sem 4',actividad:'Marco estratégico TO-BE: Misión, Visión, Focos',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+    {id:'C4',fase:'Diseño',semana:'Sem 4',actividad:'Sistema OKR completo con KRs por área',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+    {id:'C5',fase:'Diseño',semana:'Sem 5',actividad:'Manual de Organización y Funciones',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+    {id:'D1',fase:'Cierre',semana:'Sem 6',actividad:'Sesión de validación con Gerencia ASIMCO',responsable:'CC&A + ASIMCO',estado:'Pendiente',completado:'No'},
+    {id:'D7',fase:'Cierre',semana:'Sem 6',actividad:'Informe final y cierre técnico',responsable:'CC&A',estado:'Pendiente',completado:'No'},
+  ],
+  recomendaciones: [
+    {id:'R1',titulo:'Separar doble rol: Sub-Gerencia + Auditoría',descripcion:'Emerson Canido ocupa dos roles críticos generando dependencia y conflicto de interés estructural. Si esta persona sale, dos áreas colapsan. La separación es no negociable.',prioridad:'Crítico',horizonte:'0–30 días',area:'Estructura',estado:'Pendiente'},
+    {id:'R2',titulo:'Cubrir vacante del área Legal con titular calificado',descripcion:'Área Legal sin titular. Para una firma de Auditores, operar sin cobertura legal formal representa un riesgo institucional inaceptable.',prioridad:'Crítico',horizonte:'0–30 días',area:'Legal',estado:'Pendiente'},
+    {id:'R3',titulo:'Implementar reunión semanal de gestión con actas',descripcion:'Sin espacios formales de coordinación. La reunión semanal de 60 min con agenda y actas es la acción de mayor impacto y menor costo.',prioridad:'Crítico',horizonte:'0–30 días',area:'Gobernanza',estado:'Pendiente'},
+    {id:'R4',titulo:'Estandarizar procesos críticos con documentación',descripcion:'Procesos manuales sin documentación. Documentar los 5 procesos más críticos de Contabilidad y Auditoría con flujograma y checklist.',prioridad:'Alto',horizonte:'30–90 días',area:'Procesos',estado:'Pendiente'},
+    {id:'R5',titulo:'Activar tablero de KPIs con 5 indicadores mínimos',descripcion:'Organización opera sin ningún indicador activo. 5 KPIs en Google Sheets actualizados semanalmente representan un salto cualitativo inmediato.',prioridad:'Alto',horizonte:'30–90 días',area:'Control',estado:'En proceso'},
+    {id:'R7',titulo:'Desarrollar 2 nuevas líneas de servicio de alto valor',descripcion:'Consultoría digital + due diligence empresarial. Oportunidad de mercado sin competencia directa en Santa Cruz.',prioridad:'Estratégico',horizonte:'90–180 días',area:'Crecimiento',estado:'Pendiente'},
+  ],
+  timestamp: new Date().toISOString()
+};
+
+// ══════════════════════════════════════════════════════════════
+// FETCH DE DATOS
+// ══════════════════════════════════════════════════════════════
+async function fetchData() {
+  if (!API_URL) { showConfigModal(); return; }
+  const btn = document.getElementById('sync-btn');
+  btn.classList.add('syncing'); btn.textContent = '↻ Sincronizando...';
+  try {
+    const res  = await fetch(API_URL + '?action=all&t=' + Date.now(), { cache:'no-store' });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    DATA = json;
+    localStorage.setItem(LS_KEY_DATA, JSON.stringify(DATA));
+    document.getElementById('last-sync').textContent = 'Sync: ' + new Date().toLocaleTimeString('es-BO', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('error-banner').style.display = 'none';
+    renderAll();
+  } catch (err) {
+    document.getElementById('error-banner').style.display = 'block';
+    document.getElementById('error-msg').textContent = err.message;
+    const cached = localStorage.getItem(LS_KEY_DATA);
+    if (cached) { DATA = JSON.parse(cached); renderAll(); }
+    else { DATA = DEMO; renderAll(); }
+  } finally {
+    btn.classList.remove('syncing'); btn.textContent = '↻ Sincronizar';
+  }
+}
+
+function useDemoData() {
+  DATA = DEMO; API_URL = '';
+  hideConfigModal();
+  renderAll();
+  document.getElementById('last-sync').textContent = 'Modo demo';
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ══════════════════════════════════════════════════════════════
+function renderAll() {
+  if (!DATA) return;
+  const cfg = DATA.config || {};
+  // Nav / sidebar
+  document.getElementById('dash-title').textContent = (cfg.org_nombre || 'ASIMCO SRL') + ' · PACE 45';
+  document.getElementById('dash-sub').textContent = 'Consultor: ' + (cfg.consultor || '—') + ' · Período: ' + (cfg.periodo || '—') + ' · Fase: ' + (cfg.fase_actual || '—');
+  document.getElementById('sb-semana').textContent = (cfg.semana_actual || '—') + ' / ' + (cfg.semanas_total || '6');
+  document.getElementById('sb-clientes').textContent = cfg.clientes_corp || '—';
+  document.getElementById('sb-kpis').textContent = (DATA.kpis || []).filter(k => k.valor_actual && k.valor_actual !== '').length;
+
+  renderDashboardMetrics(cfg);
+  renderCharts();
+  renderOKRs(DATA.okrs || []);
+  renderKPIs(DATA.kpis || []);
+  renderBrechas(DATA.brechas || []);
+  renderRoadmap(DATA.roadmap || []);
+  renderRecomendaciones(DATA.recomendaciones || []);
+}
+
+// ── DASHBOARD METRICS ─────────────────────────────────────────
+function renderDashboardMetrics(cfg) {
+  const brechas    = DATA.brechas || [];
+  const criticas   = brechas.filter(b => b.nivel === 'Crítico').length;
+  const semana     = cfg.semana_actual || '—';
+  const entregables= '11';
+  const clientes   = (parseInt(cfg.clientes_corp)||0) + (parseInt(cfg.clientes_belcorp)||0);
+
+  document.getElementById('dash-metrics').innerHTML = `
+    <div class="card card-tr"><div class="mc-lbl">Brechas críticas</div><div class="mc-val r">${criticas}</div><div class="mc-sub">De ${brechas.length} totales · Acción inmediata</div></div>
+    <div class="card card-t3"><div class="mc-lbl">Semana PACE 45</div><div class="mc-val">${semana}<span style="font-size:1.2rem;color:var(--mid)"> / 6</span></div><div class="mc-sub">${cfg.fase_actual || '—'}</div></div>
+    <div class="card card-tg"><div class="mc-lbl">Total clientes</div><div class="mc-val gold">${clientes}</div><div class="mc-sub">${cfg.clientes_corp||'—'} corp. + ${cfg.clientes_belcorp||'—'} Belcorp</div></div>
+    <div class="card card-tv"><div class="mc-lbl">Entregables contrato</div><div class="mc-val g">${entregables}</div><div class="mc-sub">CC&A STRATEX SPA · Mayo 2026</div></div>
+  `;
+
+  document.getElementById('dash-imperativos').innerHTML = `
+    <div class="card card-t3"><div class="mc-lbl">Imperativo 1</div><div class="card-title">Formalización Estructural</div><div class="card-body">Redefinir áreas, funciones y jerarquías. Eliminar informalidad operativa. Manual de Organización.</div></div>
+    <div class="card card-tg"><div class="mc-lbl">Imperativo 2</div><div class="card-title">Profesionalización Operativa</div><div class="card-body">KPIs, OKRs, automatización de procesos. Gestión basada en datos y resultados medibles.</div></div>
+    <div class="card card-tv"><div class="mc-lbl">Imperativo 3</div><div class="card-title">Escalabilidad Institucional</div><div class="card-body">Estructura que crezca sin colapsar. Alianzas estratégicas y nuevas líneas de servicio.</div></div>
+  `;
+}
+
+// ── CHARTS ────────────────────────────────────────────────────
+function destroyChart(id) { if (chartsMap[id]) { chartsMap[id].destroy(); delete chartsMap[id]; } }
+
+function renderCharts() {
+  destroyChart('radar'); destroyChart('brechasC');
+  destroyChart('kpiC'); destroyChart('bscC');
+
+  // Radar
+  const rCtx = document.getElementById('radarChart').getContext('2d');
+  chartsMap['radar'] = new Chart(rCtx, {
+    type:'radar',
+    data:{ labels:['Estructura','Procesos','Control','Alineación','Personas','Tecnología','Clientes'],
+      datasets:[
+        {label:'AS-IS',data:[2,2.5,1.5,2,4,3,5],borderColor:'#C8102E',backgroundColor:'rgba(200,16,46,.1)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#C8102E'},
+        {label:'TO-BE',data:[8,7.5,8,7,7,7,8],borderColor:'#1B2A4A',backgroundColor:'rgba(27,42,74,.07)',borderWidth:2,borderDash:[5,3],pointRadius:4,pointBackgroundColor:'#1B2A4A'}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{min:0,max:10,ticks:{font:{size:9},color:'#999'},grid:{color:'#e5e0d8'},pointLabels:{font:{size:10,family:'Space Grotesk',weight:'500'},color:'#374151'}}},
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}}}
+  });
+
+  // Brechas donut
+  const brechas = DATA.brechas || [];
+  const bCrit = brechas.filter(b=>b.nivel==='Crítico').length;
+  const bAlto = brechas.filter(b=>b.nivel==='Alto').length;
+  const bOtro = brechas.length - bCrit - bAlto;
+  const bCtx  = document.getElementById('brechasChart').getContext('2d');
+  chartsMap['brechasC'] = new Chart(bCtx, {
+    type:'doughnut',
+    data:{labels:['Crítico','Alto','Medio'],datasets:[{data:[bCrit,bAlto,bOtro],backgroundColor:['#C8102E','#D97706','#6B7280'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}}}
+  });
+
+  // KPI semáforo
+  const kpis = DATA.kpis || [];
+  const kV = kpis.filter(k=>k.semaforo==='Verde').length;
+  const kA = kpis.filter(k=>k.semaforo==='Amarillo').length;
+  const kR = kpis.filter(k=>k.semaforo==='Rojo').length;
+  if (document.getElementById('kpiChart')) {
+    destroyChart('kpiC');
+    const kCtx = document.getElementById('kpiChart').getContext('2d');
+    chartsMap['kpiC'] = new Chart(kCtx, {
+      type:'doughnut',
+      data:{labels:['Verde (OK)','Amarillo (Alerta)','Rojo (Crítico)'],datasets:[{data:[kV,kA,kR],backgroundColor:['#16A34A','#D97706','#DC2626'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}
+    });
+  }
+
+  // BSC
+  const persp = ['Financiera','Clientes','Procesos','Personas'];
+  const bscVals = persp.map(p => kpis.filter(k=>k.perspectiva===p).length);
+  if (document.getElementById('bscChart')) {
+    destroyChart('bscC');
+    const sCtx = document.getElementById('bscChart').getContext('2d');
+    chartsMap['bscC'] = new Chart(sCtx, {
+      type:'bar',
+      data:{labels:persp,datasets:[{data:bscVals,backgroundColor:['#1B2A4A','#1A6B8A','#D4A017','#2E7D32'],borderRadius:5,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true,ticks:{font:{size:10},color:'#999'},grid:{color:'#e5e0d8'}},x:{ticks:{font:{size:10},color:'#555'},grid:{display:false}}}}
+    });
+  }
+}
+
+// ── OKRs ─────────────────────────────────────────────────────
+function renderOKRs(okrs) {
+  const byObj = {};
+  okrs.forEach(r => {
+    const key = r.id + '|' + r.objetivo + '|' + r.horizonte;
+    if (!byObj[key]) byObj[key] = [];
+    byObj[key].push(r);
+  });
+
+  const colors = { O1:'#1B2A4A', O2:'#1B3A2A', O3:'#4A2A1B' };
+  const accent = { O1:'var(--gold)', O2:'#86efac', O3:'#fcd34d' };
+
+  const html = Object.entries(byObj).map(([key, krs]) => {
+    const [id, obj, horiz] = key.split('|');
+    const bg = colors[id] || '#1B2A4A';
+    const ac = accent[id] || 'var(--gold)';
+
+    const krsHtml = krs.map(kr => {
+      const inicio = parseFloat(kr.meta_inicio) || 0;
+      const fin    = parseFloat(kr.meta_fin)    || 100;
+      const actual = parseFloat(kr.valor_actual)|| 0;
+      const pct    = fin === inicio ? 0 : Math.min(100, Math.max(0, Math.round((actual - inicio) / (fin - inicio) * 100)));
+      const col    = pct >= 70 ? '#16A34A' : pct >= 30 ? '#D97706' : '#DC2626';
+      const pill   = kr.estado === 'Completado' ? 'p-green' : kr.estado === 'En proceso' ? 'p-blue' : 'p-gray';
+      return `<div class="kr-item">
+        <span class="kr-num">${kr.kr_num}</span>
+        <div style="flex:1">
+          <div class="kr-label">${kr.key_result}</div>
+          <div class="kr-meta">
+            <span class="kr-target">${kr.meta_inicio} → ${kr.meta_fin} ${kr.unidad||''}</span>
+            <div class="kr-bar"><div class="kr-fill" style="width:${pct}%;background:${col}"></div></div>
+            <span class="kr-pct" style="color:${col}">${pct}%</span>
+            <span class="pill ${pill}">${kr.estado}</span>
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:.6rem;color:rgba(255,255,255,0) visibility:hidden;min-width:80px"></div>
+      </div>`;
+    }).join('');
+
+    return `<div class="okr-card">
+      <div class="okr-hdr" style="background:${bg}">
+        <div>
+          <div style="font-family:'JetBrains Mono';font-size:.58rem;color:${ac};letter-spacing:1px;margin-bottom:.25rem">${id} · ${horiz}</div>
+          <div class="okr-obj">${obj}</div>
+        </div>
+        <div class="okr-period">${horiz}</div>
+      </div>
+      <div class="okr-body">${krsHtml}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('okr-container').innerHTML = html || '<p style="color:var(--mid);font-size:.85rem">Sin datos de OKRs disponibles. Verifica la hoja OKRs en Google Sheets.</p>';
+}
+
+// ── KPIs ──────────────────────────────────────────────────────
+function renderKPIs(kpis) {
+  const perspectivas = ['Financiera','Clientes','Procesos','Personas'];
+  const perspIcons   = { Financiera:'💰', Clientes:'🤝', Procesos:'⚙️', Personas:'👥' };
+  const semColorMap  = { Verde:'#16A34A', Amarillo:'#D97706', Rojo:'#DC2626' };
+  const semClass     = { Verde:'sem-v', Amarillo:'sem-a', Rojo:'sem-r' };
+
+  const html = perspectivas.map(p => {
+    const items = kpis.filter(k => k.perspectiva === p);
+    if (!items.length) return '';
+    const cards = items.map(k => {
+      const col = semColorMap[k.semaforo] || '#D97706';
+      const sc  = semClass[k.semaforo]   || 'sem-a';
+      return `<div class="kpi-card" style="--c:${col}">
+        <div class="kpi-top">
+          <div class="kpi-name">${k.nombre}</div>
+          <div class="kpi-area">${k.area}</div>
+        </div>
+        <div class="kpi-val">${k.valor_actual || '—'}<span style="font-size:.9rem;color:var(--mid);font-weight:400"> ${k.unidad||''}</span></div>
+        <div class="kpi-meta"><span class="sem ${sc}"></span>Meta: ${k.meta||'—'} ${k.unidad||''} ${k.comentario ? '· '+k.comentario : ''}</div>
+      </div>`;
+    }).join('');
+    return `<div class="sec-hdr" style="margin-top:1rem"><div class="sec-title">${perspIcons[p]} ${p}</div></div><div class="kpi-grid">${cards}</div>`;
+  }).join('');
+
+  document.getElementById('kpi-perspectivas').innerHTML = html || '<p style="color:var(--mid);font-size:.85rem">Sin datos de KPIs.</p>';
+}
+
+// ── BRECHAS ───────────────────────────────────────────────────
+function renderBrechas(brechas) {
+  const colMap = { Crítico:'var(--crimson)', Alto:'var(--gold)', Medio:'var(--mid)' };
+  const pillMap= { Crítico:'p-red', Alto:'p-gold', Medio:'p-gray' };
+  const urg    = { Inmediata:'p-red', Alta:'p-gold', Media:'p-gray' };
+
+  const criticas = brechas.filter(b => b.nivel === 'Crítico');
+  const otras    = brechas.filter(b => b.nivel !== 'Crítico');
+
+  let html = '';
+  if (criticas.length) {
+    html += `<div class="alert a-danger"><div>🚨</div><div class="alert-body"><strong>${criticas.length} brechas críticas · Requieren acción inmediata</strong>Estas brechas comprometen la continuidad operativa y el crecimiento de ASIMCO SRL.</div></div>`;
+  }
+
+  html += brechas.map((b, i) => `
+    <div class="brecha">
+      <div class="brecha-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="brecha-body">
+        <div class="brecha-title">${b.brecha}</div>
+        <div class="brecha-desc">${b.descripcion}</div>
+        <div class="brecha-tags">
+          <span class="pill ${pillMap[b.nivel]||'p-gray'}">${b.nivel}</span>
+          <span class="pill p-blue">${b.area}</span>
+          <span class="pill ${urg[b.urgencia]||'p-gray'}">Urgencia: ${b.urgencia}</span>
+          <span class="pill p-navy">${b.estado}</span>
+        </div>
+      </div>
+      <div style="text-align:right;min-width:80px">
+        <div style="font-size:1.8rem;font-weight:800;font-family:'Syne';color:${colMap[b.nivel]||'var(--mid)'}">${b.nivel==='Crítico'?'🔴':b.nivel==='Alto'?'🟡':'🟢'}</div>
+        <div style="font-family:'JetBrains Mono';font-size:.58rem;color:var(--mid)">${b.impacto}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('brechas-container').innerHTML = html || '<p style="color:var(--mid)">Sin datos de brechas.</p>';
+}
+
+// ── ROADMAP ───────────────────────────────────────────────────
+function renderRoadmap(acts) {
+  const fases = [...new Set(acts.map(a => a.fase))];
+  const total = acts.length;
+  const done  = acts.filter(a => a.completado === 'Sí' || a.estado === 'Completado').length;
+  const pct   = total ? Math.round(done/total*100) : 0;
+
+  document.getElementById('roadmap-metrics').innerHTML = `
+    <div class="card card-t3"><div class="mc-lbl">Total actividades</div><div class="mc-val">${total}</div></div>
+    <div class="card card-tv"><div class="mc-lbl">Completadas</div><div class="mc-val g">${done}</div></div>
+    <div class="card card-tr"><div class="mc-lbl">Pendientes</div><div class="mc-val r">${total - done}</div></div>
+    <div class="card card-tg"><div class="mc-lbl">Avance general</div><div class="mc-val gold">${pct}%</div></div>
+  `;
+
+  const stMap = { Completado:'#16A34A', 'En proceso':'#1A6B8A', Pendiente:'#6B7280' };
+  const stPill= { Completado:'p-green',  'En proceso':'p-blue',  Pendiente:'p-gray'  };
+
+  const html = fases.map(f => {
+    const items = acts.filter(a => a.fase === f);
+    const fdone = items.filter(a => a.completado === 'Sí' || a.estado === 'Completado').length;
+    const fpct  = items.length ? Math.round(fdone/items.length*100) : 0;
+    const fPill = fpct === 100 ? 'p-green' : fpct > 0 ? 'p-blue' : 'p-gray';
+
+    const rows = items.map(a => {
+      const isDone = a.completado === 'Sí' || a.estado === 'Completado';
+      const col    = stMap[a.estado] || '#6B7280';
+      return `<div class="rm-act">
+        <div class="rm-dot" style="background:${col}"></div>
+        <div class="rm-text${isDone?' done':''}">${a.actividad}</div>
+        <span class="pill ${stPill[a.estado]||'p-gray'}">${a.estado}</span>
+        <div class="rm-owner">${a.responsable}</div>
+        <div class="rm-owner">${a.semana||''}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="rm-item open">
+      <div class="rm-hdr" onclick="this.parentElement.classList.toggle('open')">
+        <span class="rm-week">${items[0]?.semana||'—'}</span>
+        <span class="rm-title">${f}</span>
+        <span class="pill ${fPill}">${fpct}%</span>
+        <span style="font-family:'JetBrains Mono';font-size:.6rem;color:var(--mid)">${fdone}/${items.length}</span>
+      </div>
+      <div class="rm-body">${rows}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('roadmap-container').innerHTML = html || '<p style="color:var(--mid)">Sin datos de roadmap.</p>';
+}
+
+// ── RECOMENDACIONES ───────────────────────────────────────────
+function renderRecomendaciones(recs) {
+  const prioCol  = { Crítico:'var(--crimson)', Alto:'var(--gold)', Estratégico:'var(--navy)' };
+  const prioPill = { Crítico:'p-red', Alto:'p-gold', Estratégico:'p-blue', Medio:'p-gray' };
+  const horizons = [...new Set(recs.map(r => r.horizonte))];
+
+  const html = horizons.map(h => {
+    const items = recs.filter(r => r.horizonte === h);
+    const label = h.includes('30') ? '🔴 Prioridad 1 · Inmediato' : h.includes('90') ? '🟡 Prioridad 2 · Corto plazo' : '🔵 Prioridad 3 · Mediano plazo';
+    const pill  = h.includes('30') ? 'p-red' : h.includes('90') ? 'p-gold' : 'p-blue';
+
+    return `<div class="sec-hdr" style="margin-top:1.5rem"><div class="sec-title">${label}</div><span class="pill ${pill}">${h}</span></div>` +
+      items.map(r => `<div class="rec" style="--c:${prioCol[r.prioridad]||'var(--navy)'}">
+        <div class="rec-hdr">
+          <div class="rec-title">${r.titulo}</div>
+          <div class="rec-badges">
+            <span class="pill ${prioPill[r.prioridad]||'p-gray'}">${r.prioridad}</span>
+            <span class="pill p-blue">${r.area}</span>
+            <span class="pill ${r.estado==='En proceso'?'p-green':'p-gray'}">${r.estado}</span>
+          </div>
+        </div>
+        <div class="rec-body">${r.descripcion}</div>
+      </div>`).join('');
+  }).join('');
+
+  document.getElementById('rec-container').innerHTML = html || '<p style="color:var(--mid)">Sin datos de recomendaciones.</p>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab,.sb-link').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab,.sb-link').forEach(el => {
+    if ((el.getAttribute('onclick')||'').includes(name)) el.classList.add('active');
+  });
+  if (name === 'kpis' || name === 'dashboard') setTimeout(renderCharts, 50);
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONFIG MODAL
+// ══════════════════════════════════════════════════════════════
+function showConfigModal() { document.getElementById('config-modal').style.display = 'flex'; }
+function hideConfigModal()  { document.getElementById('config-modal').style.display = 'none'; }
+
+function saveAndConnect() {
+  const url = document.getElementById('api-url-input').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    alert('URL inválida. Debe comenzar con https://script.google.com'); return;
+  }
+  API_URL = url;
+  localStorage.setItem(LS_KEY_URL, url);
+  hideConfigModal();
+  fetchData();
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('api-url-input').value = API_URL;
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('hide');
+    setTimeout(() => document.getElementById('loading').style.display = 'none', 400);
+    if (API_URL) {
+      document.getElementById('loading-msg').textContent = 'Cargando datos...';
+      fetchData();
+    } else {
+      showConfigModal();
+      DATA = DEMO;
+      renderAll();
+    }
+  }, 1800);
+});
+</script>
+</body>
+</html>
