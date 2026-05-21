@@ -284,7 +284,167 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
   .nav-name span{display:none}
   .view-title{font-size:1.5rem}
 }
-@media print{.sidebar,.topnav,#loading,.modal-overlay{display:none!important}.main{margin-left:0}.view{display:block!important}}
+
+/* ══════════════════════════════════════════════
+   PRINT / PDF STYLES
+   ══════════════════════════════════════════════ */
+@media print {
+  /* ── PAGE SETUP ── */
+  @page {
+    size: A4 portrait;
+    margin: 22mm 18mm 22mm 18mm;
+  }
+  @page :first { margin-top: 18mm; }
+
+  /* ── HIDE UI CHROME ── */
+  .sidebar, .topnav, #loading, .modal-overlay,
+  .mobile-nav, .drawer, .drawer-overlay,
+  .sync-btn, .last-sync, .sb-cfg-btn,
+  .hamburger, #error-banner { display: none !important; }
+
+  /* ── LAYOUT RESET ── */
+  body { background: #fff !important; font-size: 11pt !important; color: #111 !important; }
+  .app { display: block !important; }
+  .main { margin-left: 0 !important; padding-bottom: 0 !important; }
+
+  /* ── SHOW ALL VIEWS ── */
+  .view { display: block !important; padding: 0 !important; }
+
+  /* ── PAGE BREAK BETWEEN VIEWS ── */
+  .view { page-break-before: always; }
+  .view:first-of-type { page-break-before: avoid; }
+  #view-dashboard { page-break-before: avoid; }
+
+  /* ── RUNNING HEADER ── */
+  .print-header {
+    display: block !important;
+    position: running(header);
+    font-family: 'Space Grotesk', Arial, sans-serif;
+    font-size: 9pt;
+    color: #1B2A4A;
+    border-bottom: 2px solid #C8102E;
+    padding-bottom: 4pt;
+    margin-bottom: 12pt;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── RUNNING FOOTER ── */
+  .print-footer {
+    display: block !important;
+    position: running(footer);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    color: #6B7280;
+    border-top: 1px solid #E5E0D8;
+    padding-top: 4pt;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .view-title  { font-size: 14pt !important; color: #1B2A4A !important; margin-bottom: 4pt !important; }
+  .view-tag    { font-size: 8pt  !important; color: #C8102E !important; }
+  .view-sub    { font-size: 10pt !important; color: #6B7280 !important; margin-bottom: 10pt !important; }
+  .view-hdr    { margin-bottom: 10pt !important; border-bottom: 1pt solid #E5E0D8; padding-bottom: 6pt; }
+  .card-title  { font-size: 13pt !important; color: #111827 !important; margin-bottom: 5pt !important; }
+  .card-body   { font-size: 11pt !important; color: #374151 !important; line-height: 1.5 !important; }
+  .sec-title   { font-size: 13pt !important; }
+  .mc-lbl      { font-size: 8pt  !important; }
+  .mc-val      { font-size: 18pt !important; }
+  .mc-sub      { font-size: 9pt  !important; }
+
+  /* ── TABLES ── */
+  .tbl         { font-size: 9pt  !important; width: 100% !important; border-collapse: collapse !important; }
+  .tbl th      { font-size: 8pt  !important; padding: 4pt 6pt !important; background: #1B2A4A !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .tbl td      { font-size: 9pt  !important; padding: 4pt 6pt !important; border-bottom: 0.5pt solid #E5E0D8 !important; }
+
+  /* ── GRIDS ── */
+  .g4 { grid-template-columns: repeat(4,1fr) !important; gap: 6pt !important; }
+  .g3 { grid-template-columns: repeat(3,1fr) !important; gap: 6pt !important; }
+  .g2 { grid-template-columns: 1fr 1fr       !important; gap: 6pt !important; }
+  .kpi-grid { grid-template-columns: repeat(3,1fr) !important; gap: 5pt !important; }
+
+  /* ── CARDS ── */
+  .card    { border: 0.5pt solid #E5E0D8 !important; border-radius: 4pt !important; padding: 8pt !important; page-break-inside: avoid; }
+  .card[class*="card-t"] { border-top-width: 2pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* ── OKR ── */
+  .okr-card  { page-break-inside: avoid; margin-bottom: 8pt !important; }
+  .okr-hdr   { padding: 6pt 8pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .okr-obj   { font-size: 11pt !important; }
+  .okr-period{ font-size: 8pt  !important; }
+  .kr-label  { font-size: 10pt !important; }
+  .kr-target { font-size: 8pt  !important; }
+  .kr-pct    { font-size: 9pt  !important; }
+  .kr-bar    { height: 3pt !important; }
+  .kr-fill   { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* ── KPI CARDS ── */
+  .kpi-card  { page-break-inside: avoid; padding: 6pt !important; }
+  .kpi-val   { font-size: 15pt !important; }
+  .kpi-name  { font-size: 9pt  !important; }
+  .kpi-area  { font-size: 7pt  !important; }
+  .kpi-meta  { font-size: 8pt  !important; }
+  .kpi-card::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* ── BRECHAS ── */
+  .brecha      { page-break-inside: avoid; padding: 6pt !important; margin-bottom: 5pt !important; }
+  .brecha-num  { font-size: 12pt !important; }
+  .brecha-title{ font-size: 11pt !important; }
+  .brecha-desc { font-size: 9pt  !important; }
+
+  /* ── ROADMAP ── */
+  .rm-item   { page-break-inside: avoid; margin-bottom: 5pt !important; }
+  .rm-body   { display: block !important; } /* show all expanded */
+  .rm-title  { font-size: 11pt !important; }
+  .rm-week   { font-size: 8pt  !important; }
+  .rm-act    { font-size: 9pt  !important; padding: 2pt 0 !important; }
+  .rm-owner  { font-size: 7pt  !important; }
+
+  /* ── RECOMENDACIONES ── */
+  .rec       { page-break-inside: avoid; margin-bottom: 6pt !important; padding: 6pt 8pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rec-title { font-size: 11pt !important; }
+  .rec-body  { font-size: 9pt  !important; }
+
+  /* ── PILLS / BADGES ── */
+  .pill, [class^="p-"] { font-size: 7pt !important; padding: 1pt 4pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* ── ALERTS ── */
+  .alert { padding: 6pt 8pt !important; margin-bottom: 6pt !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .alert-body { font-size: 9pt !important; }
+
+  /* ── HIDE CHARTS (replaced by static header in print) ── */
+  .chart-wrap, .chart-wrap-sm { display: none !important; }
+
+  /* ── CENTER CONTENT ── */
+  .content-print { max-width: 100% !important; margin: 0 auto !important; }
+
+  /* ── STATIC PAGE HEADER/FOOTER (repeated on each page) ── */
+  .pdf-page-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2pt solid #C8102E;
+    padding-bottom: 5pt;
+    margin-bottom: 10pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .pdf-page-footer {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 0.5pt solid #E5E0D8;
+    padding-top: 4pt;
+    margin-top: 8pt;
+    font-size: 8pt;
+    color: #6B7280;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -350,6 +510,7 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
   <div class="nav-right">
     <button class="sync-btn" id="sync-btn" onclick="fetchData()">↻ Sincronizar</button>
     <span class="last-sync" id="last-sync">—</span>
+    <button class="sync-btn" onclick="exportPDF()" style="background:rgba(200,16,46,.15);border-color:rgba(200,16,46,.4);color:#fca5a5">⬇ PDF</button>
     <span class="badge-pace">PACE 45</span>
   </div>
 </nav>
@@ -411,6 +572,11 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 
 <!-- ══ OKR ══ -->
 <div class="view" id="view-okr">
+  <div class="pdf-page-header" style="display:none">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14pt;color:#1B2A4A;letter-spacing:1px">ASIMCO · PACE 45</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;color:#C8102E;letter-spacing:2px;text-transform:uppercase">Marco OKR / KR</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#6B7280">Mayo 2026</div>
+  </div>
   <div class="view-hdr">
     <div class="view-tag">// 02 · Marco Estratégico</div>
     <h1 class="view-title">OKRs y Key Results</h1>
@@ -423,6 +589,11 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 
 <!-- ══ KPIs ══ -->
 <div class="view" id="view-kpis">
+  <div class="pdf-page-header" style="display:none">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14pt;color:#1B2A4A;letter-spacing:1px">ASIMCO · PACE 45</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;color:#C8102E;letter-spacing:2px;text-transform:uppercase">KPIs Estratégicos</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#6B7280">Mayo 2026</div>
+  </div>
   <div class="view-hdr">
     <div class="view-tag">// 03 · Sistema de Indicadores</div>
     <h1 class="view-title">KPIs Estratégicos y Operativos</h1>
@@ -437,6 +608,11 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 
 <!-- ══ BRECHAS ══ -->
 <div class="view" id="view-brechas">
+  <div class="pdf-page-header" style="display:none">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14pt;color:#1B2A4A;letter-spacing:1px">ASIMCO · PACE 45</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;color:#C8102E;letter-spacing:2px;text-transform:uppercase">Brechas Críticas</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#6B7280">Mayo 2026</div>
+  </div>
   <div class="view-hdr">
     <div class="view-tag">// 04 · Diagnóstico</div>
     <h1 class="view-title">Brechas Críticas Identificadas</h1>
@@ -447,6 +623,11 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 
 <!-- ══ ROADMAP ══ -->
 <div class="view" id="view-roadmap">
+  <div class="pdf-page-header" style="display:none">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14pt;color:#1B2A4A;letter-spacing:1px">ASIMCO · PACE 45</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;color:#C8102E;letter-spacing:2px;text-transform:uppercase">Hoja de Ruta PACE 45</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#6B7280">Mayo 2026</div>
+  </div>
   <div class="view-hdr">
     <div class="view-tag">// 05 · Plan de Trabajo</div>
     <h1 class="view-title">Hoja de Ruta PACE 45</h1>
@@ -458,6 +639,11 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 
 <!-- ══ RECOMENDACIONES ══ -->
 <div class="view" id="view-recomendaciones">
+  <div class="pdf-page-header" style="display:none">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14pt;color:#1B2A4A;letter-spacing:1px">ASIMCO · PACE 45</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9pt;color:#C8102E;letter-spacing:2px;text-transform:uppercase">Recomendaciones Ejecutivas</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8pt;color:#6B7280">Mayo 2026</div>
+  </div>
   <div class="view-hdr">
     <div class="view-tag">// 06 · Recomendaciones CC&A</div>
     <h1 class="view-title">Recomendaciones Ejecutivas</h1>
@@ -983,6 +1169,69 @@ window.showView = function(name){
   if(s2) s2.textContent = document.getElementById('sb-semana')?.textContent || '—';
   if(c2) c2.textContent = document.getElementById('sb-clientes')?.textContent || '—';
 };
+
+// ── PDF EXPORT ────────────────────────────────────────────────
+function exportPDF() {
+  // Show all views for print
+  const views = document.querySelectorAll('.view');
+  const headers = document.querySelectorAll('.pdf-page-header');
+  const rmBodies = document.querySelectorAll('.rm-body');
+  const activeView = document.querySelector('.view.active');
+
+  // Show all views
+  views.forEach(v => v.style.display = 'block');
+  // Show print headers
+  headers.forEach(h => h.style.display = 'flex');
+  // Expand all roadmap phases
+  rmBodies.forEach(b => b.style.display = 'block');
+
+  // Add footer to each view
+  const footerHtml = `<div class="pdf-page-footer" style="
+    display:flex; flex-direction:column; gap:0;
+    border-top: 1.5pt solid #B8860B;
+    padding-top: 6pt; margin-top: 10pt;
+    font-family: Arial, sans-serif;
+  ">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:3pt;">
+      <div style="display:flex; align-items:center; gap:8pt;">
+        <div style="width:4pt; height:28pt; background:#B8860B;"></div>
+        <div>
+          <div style="font-size:14pt; font-weight:700; color:#111; letter-spacing:-0.5px; line-height:1.1;">CC<span style="font-size:11pt">&amp;</span>A</div>
+          <div style="font-size:8pt; color:#B8860B; font-weight:600; letter-spacing:1.5px; border-top:0.5pt solid #B8860B; padding-top:1pt; margin-top:1pt;">
+            Strat<span style="font-weight:400">Ex</span> &nbsp;<span style="font-weight:300; letter-spacing:2px; font-size:7pt; color:#888;">BOUTIQUE CONSULTORA</span>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right; font-size:7.5pt; color:#888; display:flex; gap:10pt; align-items:center;">
+        <span>📞 +56 957199052</span>
+        <span style="color:#B8860B">|</span>
+        <span>✉ info@coachcca.com</span>
+        <span style="color:#B8860B">|</span>
+        <span>📍 Región LATAM · Santiago · Chile</span>
+      </div>
+    </div>
+  </div>`;
+  const footerEls = [];
+  views.forEach(v => {
+    const el = document.createElement('div');
+    el.innerHTML = footerHtml;
+    el.className = 'pdf-footer-injected';
+    v.appendChild(el);
+    footerEls.push(el);
+  });
+
+  window.print();
+
+  // Restore after print dialog closes
+  setTimeout(() => {
+    views.forEach(v => v.style.display = '');
+    headers.forEach(h => h.style.display = 'none');
+    rmBodies.forEach(b => b.style.display = '');
+    footerEls.forEach(el => el.remove());
+    if (activeView) activeView.style.display = 'block';
+  }, 1000);
+}
+
 </script>
 
 </body>
