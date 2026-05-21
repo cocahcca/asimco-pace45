@@ -228,7 +228,62 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 .sec-tag{font-family:'JetBrains Mono';font-size:.6rem;letter-spacing:1px;text-transform:uppercase;color:var(--mid)}
 .mono{font-family:'JetBrains Mono'}
 
-@media(max-width:860px){.sidebar{display:none}.main{margin-left:0}.g4,.g3{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}.nav-tabs{display:none}}
+
+/* ── MOBILE NAV BAR (bottom) ── */
+.mobile-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:var(--navy);border-top:2px solid var(--crimson);
+  display:none;grid-template-columns:repeat(6,1fr);height:58px;
+}
+.mob-tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;cursor:pointer;border:none;background:none;
+  color:rgba(255,255,255,.45);transition:all .15s;padding:4px 2px;
+}
+.mob-tab:hover,.mob-tab.active{color:var(--gold)}
+.mob-tab .mob-ic{font-size:1.2rem;line-height:1}
+.mob-tab .mob-lbl{font-family:'JetBrains Mono';font-size:.42rem;letter-spacing:.5px;text-transform:uppercase;text-align:center;line-height:1.2}
+
+/* ── HAMBURGER ── */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:.4rem;flex-direction:column;gap:4px}
+.hamburger span{display:block;width:22px;height:2px;background:white;border-radius:2px;transition:all .25s}
+
+/* ── MOBILE DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400}
+.drawer-overlay.open{display:block}
+.drawer{
+  position:fixed;left:-260px;top:0;bottom:0;width:240px;
+  background:var(--navy2);z-index:500;transition:left .25s ease;
+  overflow-y:auto;padding-top:56px;border-right:1px solid rgba(255,255,255,.08)
+}
+.drawer.open{left:0}
+.drawer-close{
+  position:absolute;top:60px;right:-40px;width:36px;height:36px;
+  background:var(--navy2);border:none;color:white;font-size:1.2rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+
+@media(max-width:860px){
+  .sidebar{display:none}
+  .main{margin-left:0;padding-bottom:70px}
+  .g4,.g3{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+  .nav-tabs{display:none}
+  .hamburger{display:flex}
+  .mobile-nav{display:grid}
+  .view{padding:1.25rem 1rem}
+  .mc-val{font-size:1.8rem}
+  .okr-hdr{flex-direction:column;gap:.4rem}
+  .tbl{font-size:.72rem}
+  .tbl th,.tbl td{padding:.45rem .5rem}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .g4,.g3,.g2{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr}
+  .nav-name span{display:none}
+  .view-title{font-size:1.5rem}
+}
 @media print{.sidebar,.topnav,#loading,.modal-overlay{display:none!important}.main{margin-left:0}.view{display:block!important}}
 </style>
 </head>
@@ -279,6 +334,7 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 
 <!-- NAV -->
 <nav class="topnav">
+  <button class="hamburger" onclick="openDrawer()" aria-label="Menú"><span></span><span></span><span></span></button>
   <div class="nav-brand">
     <div class="nav-logo">A</div>
     <div class="nav-name" id="nav-org">ASIMCO SRL · <span>PACE 45</span></div>
@@ -867,5 +923,67 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 1800);
 });
 </script>
+
+<!-- MOBILE DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+<!-- MOBILE DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="sb-section">Vistas</div>
+  <div class="sb-link active" onclick="showView('dashboard');closeDrawer()"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-link" onclick="showView('okr');closeDrawer()"><span class="ic">🎯</span>OKR / KR</div>
+  <div class="sb-link" onclick="showView('kpis');closeDrawer()"><span class="ic">📈</span>KPIs</div>
+  <div class="sb-link" onclick="showView('brechas');closeDrawer()"><span class="ic">⚠️</span>Brechas</div>
+  <div class="sb-link" onclick="showView('roadmap');closeDrawer()"><span class="ic">🗺</span>Roadmap</div>
+  <div class="sb-link" onclick="showView('recomendaciones');closeDrawer()"><span class="ic">💡</span>Recomendaciones</div>
+  <hr class="sb-divider">
+  <div class="sb-section">Métricas en vivo</div>
+  <div class="sb-stat"><div class="sb-stat-label">Semana actual</div><div class="sb-stat-val" id="sb-semana2">—</div></div>
+  <div class="sb-stat"><div class="sb-stat-label">Clientes corporativos</div><div class="sb-stat-val" id="sb-clientes2">—</div></div>
+  <hr class="sb-divider">
+  <button class="sb-cfg-btn" onclick="fetchData();closeDrawer()">↻ Sincronizar datos</button>
+  <button class="sb-cfg-btn" style="margin-top:.5rem" onclick="window.print()">⬇ Exportar PDF</button>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+  <button class="mob-tab active" onclick="showView('dashboard')"><span class="mob-ic">📊</span><span class="mob-lbl">Dashboard</span></button>
+  <button class="mob-tab" onclick="showView('okr')"><span class="mob-ic">🎯</span><span class="mob-lbl">OKR/KR</span></button>
+  <button class="mob-tab" onclick="showView('kpis')"><span class="mob-ic">📈</span><span class="mob-lbl">KPIs</span></button>
+  <button class="mob-tab" onclick="showView('brechas')"><span class="mob-ic">⚠️</span><span class="mob-lbl">Brechas</span></button>
+  <button class="mob-tab" onclick="showView('roadmap')"><span class="mob-ic">🗺</span><span class="mob-lbl">Roadmap</span></button>
+  <button class="mob-tab" onclick="showView('recomendaciones')"><span class="mob-ic">💡</span><span class="mob-lbl">Recom.</span></button>
+</nav>
+
+<script>
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+}
+
+// Patch showView to also update mobile nav and drawer
+const _origShowView = showView;
+window.showView = function(name){
+  _origShowView(name);
+  document.querySelectorAll('.mob-tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mob-tab').forEach(el => {
+    if((el.getAttribute('onclick')||'').includes(name)) el.classList.add('active');
+  });
+  document.querySelectorAll('.drawer .sb-link').forEach(el => {
+    el.classList.remove('active');
+    if((el.getAttribute('onclick')||'').includes(name)) el.classList.add('active');
+  });
+  // Sync drawer sidebar stats
+  const s2 = document.getElementById('sb-semana2');
+  const c2 = document.getElementById('sb-clientes2');
+  if(s2) s2.textContent = document.getElementById('sb-semana')?.textContent || '—';
+  if(c2) c2.textContent = document.getElementById('sb-clientes')?.textContent || '—';
+};
+</script>
+
 </body>
 </html>
