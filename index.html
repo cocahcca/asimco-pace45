@@ -419,7 +419,7 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 // ══════════════════════════════════════════════════════════════
 const LS_KEY_URL  = 'pace45_api_url';
 const LS_KEY_DATA = 'pace45_last_data';
-let   API_URL     = localStorage.getItem(LS_KEY_URL) || '';
+let   API_URL     = 'https://script.google.com/macros/s/AKfycbwJljyCm2DknvHDsJIRrfkylbk_NfEVnR9-hZQfSApTsTNDdizC86YRSLBAB3abIptpjg/exec';
 let   DATA        = null;
 let   chartsMap   = {};
 
@@ -858,13 +858,11 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     document.getElementById('loading').classList.add('hide');
     setTimeout(() => document.getElementById('loading').style.display = 'none', 400);
-    if (API_URL) {
+    if (true) {
       document.getElementById('loading-msg').textContent = 'Cargando datos...';
       fetchData();
     } else {
-      showConfigModal();
-      DATA = DEMO;
-      renderAll();
+      fetchData();
     }
   }, 1800);
 });
