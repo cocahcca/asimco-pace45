@@ -670,7 +670,7 @@ const DEMO = {
   config: {
     org_nombre:'ASIMCO SRL', org_subtitulo:'Auditores y Consultores de Empresas',
     consultor:'Gonzalo Quiroga Soria', periodo:'Mayo – Junio 2026',
-    semana_actual:'1', clientes_corp:'28', clientes_belcorp:'84',
+    semana_actual:'1', clientes_corp:'28', clientes_otros:'84',
     fase_actual:'Arranque y Diagnóstico'
   },
   okrs: [
@@ -685,7 +685,7 @@ const DEMO = {
   kpis: [
     {id:'F1',nombre:'Ingresos mensuales',perspectiva:'Financiera',area:'Finanzas',valor_actual:'',meta:'',unidad:'USD',semaforo:'Amarillo',responsable:'Admin. Finanzas',comentario:'Sin línea base'},
     {id:'C1',nombre:'Clientes corporativos activos',perspectiva:'Clientes',area:'Comercial',valor_actual:'28',meta:'34',unidad:'N°',semaforo:'Verde',responsable:'Gerencia General',comentario:''},
-    {id:'C2',nombre:'Clientes Belcorp activos',perspectiva:'Clientes',area:'Comercial',valor_actual:'84',meta:'90',unidad:'N°',semaforo:'Verde',responsable:'Sub-Gerencia',comentario:''},
+    {id:'C2',nombre:'Clientes Otros activos',perspectiva:'Clientes',area:'Comercial',valor_actual:'84',meta:'90',unidad:'N°',semaforo:'Verde',responsable:'Sub-Gerencia',comentario:''},
     {id:'C3',nombre:'NPS de clientes',perspectiva:'Clientes',area:'Calidad',valor_actual:'',meta:'70',unidad:'Pts',semaforo:'Rojo',responsable:'Sub-Gerencia',comentario:'Sin medir'},
     {id:'P1',nombre:'% Procesos documentados',perspectiva:'Procesos',area:'Operaciones',valor_actual:'0',meta:'100',unidad:'%',semaforo:'Rojo',responsable:'Jefes de área',comentario:'Meta sem. 5'},
     {id:'P2',nombre:'Cumplimiento de plazos',perspectiva:'Procesos',area:'Operaciones',valor_actual:'',meta:'95',unidad:'%',semaforo:'Amarillo',responsable:'Jefes de área',comentario:'Sin medir'},
@@ -788,12 +788,12 @@ function renderDashboardMetrics(cfg) {
   const criticas   = brechas.filter(b => b.nivel === 'Crítico').length;
   const semana     = cfg.semana_actual || '—';
   const entregables= '11';
-  const clientes   = (parseInt(cfg.clientes_corp)||0) + (parseInt(cfg.clientes_belcorp)||0);
+  const clientes   = (parseInt(cfg.clientes_corp)||0) + (parseInt(cfg.clientes_otros)||0);
 
   document.getElementById('dash-metrics').innerHTML = `
     <div class="card card-tr"><div class="mc-lbl">Brechas críticas</div><div class="mc-val r">${criticas}</div><div class="mc-sub">De ${brechas.length} totales · Acción inmediata</div></div>
     <div class="card card-t3"><div class="mc-lbl">Semana PACE 45</div><div class="mc-val">${semana}<span style="font-size:1.2rem;color:var(--mid)"> / 6</span></div><div class="mc-sub">${cfg.fase_actual || '—'}</div></div>
-    <div class="card card-tg"><div class="mc-lbl">Total clientes</div><div class="mc-val gold">${clientes}</div><div class="mc-sub">${cfg.clientes_corp||'—'} corp. + ${cfg.clientes_belcorp||'—'} Belcorp</div></div>
+    <div class="card card-tg"><div class="mc-lbl">Total clientes</div><div class="mc-val gold">${clientes}</div><div class="mc-sub">${cfg.clientes_corp||'—'} corp. + ${cfg.clientes_otros||'—'} Otros</div></div>
     <div class="card card-tv"><div class="mc-lbl">Entregables contrato</div><div class="mc-val g">${entregables}</div><div class="mc-sub">CC&A STRATEX SPA · Mayo 2026</div></div>
   `;
 
