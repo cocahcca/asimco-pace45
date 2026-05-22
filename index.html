@@ -72,7 +72,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--paper);color:var(--
 .topnav{
   position:fixed;top:0;left:0;right:0;z-index:200;
   background:var(--navy);display:flex;align-items:center;
-  justify-content:space-between;padding:0 2rem;height:56px;
+  justify-content:space-between;padding:0 1.25rem;height:64px;
   border-bottom:3px solid var(--crimson)
 }
 .nav-brand{display:flex;align-items:center;gap:.75rem}
@@ -91,8 +91,8 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--paper);color:var(--
 .badge-pace{font-family:'JetBrains Mono';font-size:.58rem;letter-spacing:2px;background:var(--crimson);color:white;padding:.22rem .6rem;text-transform:uppercase}
 
 /* ── LAYOUT ── */
-.app{display:flex;min-height:100vh;padding-top:56px}
-.sidebar{width:220px;flex-shrink:0;background:var(--navy2);position:fixed;left:0;top:56px;bottom:0;overflow-y:auto;border-right:1px solid rgba(255,255,255,.05)}
+.app{display:flex;min-height:100vh;padding-top:64px}
+.sidebar{width:220px;flex-shrink:0;background:var(--navy2);position:fixed;left:0;top:64px;bottom:0;overflow-y:auto;border-right:1px solid rgba(255,255,255,.05)}
 .sb-section{font-family:'JetBrains Mono';font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.22);padding:.65rem 1.4rem .2rem}
 .sb-link{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.4rem;font-size:.8rem;color:rgba(255,255,255,.5);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
 .sb-link:hover{color:white;background:rgba(255,255,255,.04)}
@@ -254,7 +254,7 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 .drawer{
   position:fixed;left:-260px;top:0;bottom:0;width:240px;
   background:var(--navy2);z-index:500;transition:left .25s ease;
-  overflow-y:auto;padding-top:56px;border-right:1px solid rgba(255,255,255,.08)
+  overflow-y:auto;padding-top:64px;border-right:1px solid rgba(255,255,255,.08)
 }
 .drawer.open{left:0}
 .drawer-close{
@@ -264,6 +264,7 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
 }
 
 @media(max-width:860px){
+  .nav-logo-cca{display:none!important}
   .sidebar{display:none}
   .main{margin-left:0;padding-bottom:70px}
   .g4,.g3{grid-template-columns:1fr 1fr}
@@ -532,8 +533,13 @@ hr.rule{border:none;border-top:1px solid var(--line);margin:1.25rem 0}
   <div class="sb-stat"><div class="sb-stat-label">Clientes corporativos</div><div class="sb-stat-val" id="sb-clientes">—</div></div>
   <div class="sb-stat"><div class="sb-stat-label">KPIs activos</div><div class="sb-stat-val" id="sb-kpis">—</div></div>
   <hr class="sb-divider">
+  <div style="padding:.6rem 1.4rem;border-top:1px solid rgba(255,255,255,.06);margin-top:.5rem">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.5rem;letter-spacing:2px;color:rgba(255,255,255,.25);text-transform:uppercase;margin-bottom:.3rem">Consultor</div>
+    <div style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,.75)">Martín Arce</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gold)">Director Bolivia</div>
+  </div>
   <button class="sb-cfg-btn" onclick="showConfigModal()">⚙ Configurar fuente</button>
-  <button class="sb-cfg-btn" style="margin-top:.5rem" onclick="window.print()">⬇ Exportar PDF</button>
+  <button class="sb-cfg-btn" style="margin-top:.5rem" onclick="exportPDF()">⬇ Exportar PDF</button>
 </nav>
 
 <!-- MAIN -->
